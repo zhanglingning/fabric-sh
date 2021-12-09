@@ -1,6 +1,7 @@
 
 # ---------------------------------------------------------------------------
 # "OrdererOrgs" - Definition of organizations managing orderer nodes
+# 定于order
 # ---------------------------------------------------------------------------
 OrdererOrgs:
   # ---------------------------------------------------------------------------
@@ -20,6 +21,7 @@ OrdererOrgs:
 
 # ---------------------------------------------------------------------------
 # "PeerOrgs" - Definition of organizations managing peer nodes
+# 定义组织集群，这里预制了两个组织
 # ---------------------------------------------------------------------------
 PeerOrgs:
   # ---------------------------------------------------------------------------
@@ -32,9 +34,12 @@ PeerOrgs:
     Domain: org1.example.com
     EnableNodeOUs: true
     Template:
-      Count: 2 # Count 定义了peer节点的个数。和order节点不同，peer节点的域名由templete默认配置。 规则为"peer%d" 其中%d由0到Count-1.如果Count为2，域名即为peer0.{ { Domain}}和peer1.{ { Domain}}
+      Count: 2 
+      # Count 定义了peer节点的个数。和order节点不同，peer节点的域名由templete默认配置。 
+      # 规则为"peer%d" 其中%d由0到Count-1.如果Count为2，域名即为peer0.{ { Domain}}和peer1.{ { Domain}}
     Users:
-      Count: 1 # 配置了非管理员用户的个数(管理员的证书默认生成)
+      Count: 1 
+      # 配置了非管理员用户的个数(管理员的证书默认生成)，现有用户一个
 
   # ---------------------------------------------------------------------------
   # Org2: See "Org1" for full specification
