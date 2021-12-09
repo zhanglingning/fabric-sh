@@ -1,0 +1,394 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+################################################################################
+#
+#  configtx.yaml主要用来配置fabric的组织结构，通道及锚节点的配置。它主要完成以下几个功能
+#   
+#    生成启动 Orderer 需要的创世区块orderer.block(genesis.block)
+#    创建应用通道所需的配置交易文件
+#    生成组织锚节点更新配置交易文件
+#
+################################################################################
+
+---
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+#   - Organizations 配置段用来定义组织机构实体，以便在后续配置中引用
+#
+################################################################################
+Organizations:
+    - &OrdererOrg
+
+        # 组织名称
+        Name: OrdererOrg
+
+        # ID to load the MSP definition as
+        # 将 MSP 定义加载为的 ID （组织ID，ID是引用组织的关键）
+        ID: OrdererMSP
+
+        # MSPDir is the filesystem path which contains the MSP configuration
+        # MSPDir 是包含 MSP 配置的文件系统路径（组织的MSP证书路径）
+        MSPDir: crypto-config/ordererOrganizations/example.com/msp
+
+        # Policies defines the set of policies at this level of the config tree   For organization policies, their canonical path is usually  /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        # 定义本层级的组织策略，其权威路径为 /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies:
+            Readers:
+                Type: Signature     # 策略中明确的签名使用 Signature 语法。语法支持 AND、 OR 和 NOutOf 的任意组合。
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+        # Orderer 端点
+        OrdererEndpoints:  
+            - orderer.example.com:7050
+
+    - &Org1
+        # 组织名称
+        Name: Org1MSP
+
+        # ID to load the MSP definition as
+        # 将 MSP 定义加载为的 ID （组织ID，ID是引用组织的关键）
+        ID: Org1MSP
+
+        # MSPDir is the filesystem path which contains the MSP configuration
+        # MSPDir 是包含 MSP 配置的文件系统路径（组织的MSP证书路径）
+        MSPDir: crypto-config/peerOrganizations/org1.example.com/msp
+
+        # 锚节点定义
+        AnchorPeers:
+            - Host: peer0.org1.example.com
+              Port: 7051
+
+        # Policies defines the set of policies at this level of the config tree   For organization policies, their canonical path is usually  /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        # 定义本层级的组织策略，其权威路径为 /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('Org1MSP.peer')"
+
+    - &Org2
+        # 组织名称
+        Name: Org2MSP
+
+        # ID to load the MSP definition as
+        # 将 MSP 定义加载为的 ID （组织ID，ID是引用组织的关键）
+        ID: Org2MSP
+
+        # MSPDir is the filesystem path which contains the MSP configuration
+        # MSPDir 是包含 MSP 配置的文件系统路径（组织的MSP证书路径）
+        MSPDir: crypto-config/peerOrganizations/org2.example.com/msp
+
+        # 锚节点定义
+        AnchorPeers:
+            - Host: peer0.org2.example.com
+              Port: 9051
+
+        # Policies defines the set of policies at this level of the config tree   For organization policies, their canonical path is usually  /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        # 定义本层级的组织策略，其权威路径为 /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org2MSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('Org2MSP.peer')"
+
+################################################################################
+#
+#   SECTION: Capabilities
+#
+#   - This section defines the capabilities of fabric network. This is a new
+#   concept as of v1.1.0 and should not be utilized in mixed networks with
+#   v1.0.x peers and orderers.  Capabilities define features which must be
+#   present in a fabric binary for that binary to safely participate in the
+#   fabric network.  For instance, if a new MSP type is added, newer binaries
+#   might recognize and validate the signatures from this type, while older
+#   binaries without this support would be unable to validate those
+#   transactions.  This could lead to different versions of the fabric binaries
+#   having different world states.  Instead, defining a capability for a channel
+#   informs those binaries without this capability that they must cease
+#   processing transactions until they have been upgraded.  For v1.0.x if any
+#   capabilities are defined (including a map with all capabilities turned off)
+#   then the v1.0.x peer will deliberately crash.
+#
+#   - 本节定义了结构网络的能力。 这是一个新的v1.1.0 的概念，不应在具有 v1.0.x 节点和排序节点的混合网络中使用。 
+#   功能定义了结构二进制文件中必须存在的功能，以便该二进制文件安全地参与结构网络。 
+#   例如，如果添加了新的 MSP 类型，较新的二进制文件可能会识别并验证来自该类型的签名，
+#   而没有此支持的旧二进制文件将无法验证这些事务。 
+#   这可能导致不同版本的结构二进制文件具有不同的世界状态。 
+#   相反，为通道定义功能会通知那些没有此功能的二进制文件，它们必须停止处理事务，直到它们升级为止。 
+#   对于 v1.0.x，如果定义了任何功能（包括关闭所有功能的映射），那么 v1.0.x 对等体将故意崩溃。
+#
+#   Capabilities 段用来定义 fabric 网络的能力。这是版本 v1.1.0 引入的一个新的配置段，当与版本 v1.0.x 的 orderer 节点与 peer 节点混合组网时不可使用。
+#
+#   Capabilities 段定义了 fabric 程序要加入网络所必须支持的特性。
+#   例如，如果添加了一个新的 MSP 类型，那么更新的程序可能会根据该类型识别并验证签名，但是老版本的程序就没有办法验证这些交易。
+#   这可能导致不同版本的 fabric 程序中维护的世界状态不一致。
+#
+#   因此，通过定义通道的能力，就明确了不满足该能力要求的 fabric 程序，将无法处理交易，除非升级到新的版本。
+#   对于 v1.0.x 的程序而言，如果在 Capabilities 段定义了任何能力，即使声明不需要支持这些能力，都会导致其有意崩溃。
+#
+################################################################################
+
+Capabilities:
+
+    # Channel capabilities apply to both the orderers and the peers and must be supported by both.
+    # Set the value of the capability to true to require it.
+    # Channel配置同时应用于orderer节点与peer节点，并且必须被两种节点同时支持
+    # 将该配置项设置为ture表明要求节点具备该能力,false则不要求该节点具备该能力
+
+    Channel: &ChannelCapabilities
+
+        # V2_0 capability ensures that orderers and peers behave according
+        # to v2.0 channel capabilities. Orderers and peers from
+        # prior releases would behave in an incompatible way, and are therefore
+        # not able to participate in channels at v2.0 capability.
+        # Prior to enabling V2.0 channel capabilities, ensure that all
+        # orderers and peers on a channel are at v2.0.0 or later.
+        # V2_0 能力确保排序者和同行按照到 v2.0 通道功能。 
+        # 之前版本中的排序节点和节点的行为方式不兼容，因此无法以 v2.0 的能力参与通道。 
+        # 在启用 V2.0 通道功能之前，请确保通道上的所有排序节点和节点都处于 v2.0.0 或更高版本。
+        V2_0: true
+
+    # Orderer capabilities apply only to the orderers, and may be safely used with prior release peers.
+    # Set the value of the capability to true to require it.
+    # Orderer功能仅适用于 orderers，可以安全地操作，而无需担心升级 peers
+    # 将该配置项设置为 ture 表明要求节点具备该能力,false 则不要求该节点具备该能力
+
+    Orderer: &OrdererCapabilities
+
+        V2_0: true
+
+    # Application capabilities apply only to the peer network, and may be safely used with prior release orderers.
+    # Set the value of the capability to true to require it.
+    # 应用程序功能仅适用于 Peer 网络，可以安全地操作，而无需担心升级或更新 orderers
+    # 将该配置项设置为 ture 表明要求节点具备该能力,false 则不要求该节点具备该能力
+
+    Application: &ApplicationCapabilities
+
+        V2_0: true
+
+################################################################################
+#
+#   SECTION: Application
+#
+#   - This section defines the values to encode into a config transaction or
+#   genesis block for application related parameters
+#
+#   - Application配置段用来定义要写入创世区块或配置交易的应用参数
+#
+################################################################################
+
+Application: &ApplicationDefaults  #自定义被引用的地址
+
+    # Organizations is the list of orgs which are defined as participants on the application side of the network
+    # Organizations 配置列出参与到网络中的机构清单
+    Organizations:
+
+    # Policies defines the set of policies at this level of the config tree For Application policies, their canonical path is /Channel/Application/<PolicyName>
+    # 定义本层级的应用控制策略，其权威路径为 /Channel/Application/<PolicyName>
+    Policies:
+        Readers:
+            Type: ImplicitMeta  # 隐含的签名使用 ImplicitMeta 语法
+                                # 隐元策略只在通道配置上下文中有效，通道配置在配置树策略中是基于分层的层次结构。
+                                # 隐元策略聚合了由签名策略最终定义的配置树深层的结果。
+                                # 它们是隐藏的，因为它们基于通道配置中的当前组织隐式构建，它们是元信息，因为它们的评测不依赖于特定 MSP 规范，而是依赖于配置树中它们的其他子策略。
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+
+    # Capabilities 配置描述应用层级的能力需求，这里直接引用
+    # 前面 Capabilities 配置段中的 ApplicationCapabilities 配置项
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+################################################################################
+#
+#   SECTION: Orderer
+#
+#   - This section defines the values to encode into a config transaction or
+#   genesis block for orderer related parameters
+#
+#   - Orderer 配置段用来定义要编码写入创世区块或通道交易的排序节点参数
+#
+################################################################################
+Orderer: &OrdererDefaults
+
+    # Orderer Type: The orderer implementation to start
+    # 排序节点类型用来指定要启用的排序节点实现，不同的实现对应不同的共识算法。
+    # 目前可用的类型为：solo，kafka，EtcdRaft（2.0 以上的版本只能使用 EtcdRaft）
+    OrdererType: etcdraft
+    
+    # 服务地址,这个地方很重要，一定要配正确
+    Addresses:
+        - orderer.example.com:7050
+
+    # 定义了 EtcdRaft 排序类型被选择时的配置
+    EtcdRaft:
+        Consenters:
+        - Host: orderer.example.com
+          Port: 7050
+          ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+          ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+
+    # Batch Timeout: The amount of time to wait before creating a batch
+    # 区块打包的最大超时时间 (到了该时间就打包区块)
+    BatchTimeout: 2s
+
+    # Batch Size: Controls the number of messages batched into a block
+    # 区块打包的最大包含交易数（orderer端切分区块的参数）
+    BatchSize:
+
+        # Max Message Count: The maximum number of messages to permit in a batch
+        # 一个区块里最大的交易数
+        MaxMessageCount: 10
+
+        # Absolute Max Bytes: The absolute maximum number of bytes allowed for the serialized messages in a batch.
+        # 一个区块的最大字节数，任何时候都不能超过
+        AbsoluteMaxBytes: 99 MB
+
+        # Preferred Max Bytes: The preferred maximum number of bytes allowed for the serialized messages in a batch. A message larger than the preferred
+        # max bytes will result in a batch larger than preferred max bytes.
+        # 一个区块的建议字节数，如果一个交易消息的大小超过了这个值, 就会被放入另外一个更大的区块中
+        PreferredMaxBytes: 512 KB
+
+    # Organizations is the list of orgs which are defined as participants on the orderer side of the network
+    # 参与维护Orderer的组织，默认为空
+    Organizations:
+
+    # Policies defines the set of policies at this level of the config tree For Orderer policies, their canonical path is /Channel/Orderer/<PolicyName>
+    # 定义本层级的排序节点策略，其权威路径为 /Channel/Orderer/<PolicyName>
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        # BlockValidation specifies what signatures must be included in the block from the orderer for the peer to validate it.
+        # BlockValidation 指定必须在来自排序节点的块中包含哪些签名，以便对等方对其进行验证。
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+################################################################################
+#
+#   CHANNEL
+#
+#   - This section defines the values to encode into a config transaction or
+#   genesis block for channel related parameters.
+#
+#   - Channel 配置段用来定义要写入创世区块或配置交易的通道参数。
+# 
+################################################################################
+Channel: &ChannelDefaults
+
+    # Policies defines the set of policies at this level of the config tree For Channel policies, their canonical path is /Channel/<PolicyName>
+    # 定义本层级的通道访问策略，其权威路径为 /Channel/<PolicyName>
+    Policies:
+
+        # Who may invoke the 'Deliver' API
+        # Readers 策略定义了调用 Deliver API 提交交易的许可规则
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"     # 所有有 Readers 权限
+
+        # Who may invoke the 'Broadcast' API
+        # Writes 策略定义了调用 Broadcast API 提交交易的许可规则
+        Writers:
+            Type: ImplicitMeta 
+            Rule: "ANY Writers"     # 所有有 Writes 权限
+
+        # By default, who may modify elements at this config level
+        # Admin 策略定义了修改本层级配置的许可规则
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"  # 超过半数管理者
+
+    # Capabilities describes the channel level capabilities, see the dedicated Capabilities section elsewhere in this file for a full description
+    # Capabilities 配置描通道层级的能力需求，这里直接引用
+    # 前面 Capabilities 配置段中的 ChannelCapabilities 配置项
+    Capabilities:
+        <<: *ChannelCapabilities
+
+################################################################################
+#
+#   Profile
+#
+#   - Different configuration profiles may be encoded here to be specified
+#   as parameters to the configtxgen tool
+#
+#   - Profiles 配置段用来定义用于 configtxgen 工具的配置入口。包含联盟（consortium）的配置入口可以用来生成排序节点的创世区块。
+#
+################################################################################
+Profiles:
+
+    # TwoOrgsOrdererGenesis 用来生成 orderer 启动时所需的 block ，用于生成创世区块，名字可以任意
+    # 需要包含 Orderer 和 Consortiums 两部分
+    TwoOrgsOrdererGenesis:
+        <<: *ChannelDefaults                # 通道为默认配置，这里直接引用上面 channel 配置段中的 ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults            # Orderer为默认配置，这里直接引用上面 orderer 配置段中的 OrdererDefaults
+            Organizations:                  # 这里直接引用上面 Organizations 配置段中的 OrdererOrg
+                - *OrdererOrg
+            Capabilities:                   # 这里直接引用上面 Capabilities 配置段中的 OrdererCapabilities
+                <<: *OrdererCapabilities
+        # 联盟为默认的 SampleConsortium 联盟，添加了两个组织，表示orderer所服务的联盟列表
+        Consortiums:
+            SampleConsortium:               #  创建更多应用通道时的联盟引用 TwoOrgsChannel 所示
+                Organizations:
+                    - *Org1
+                    - *Org2
+
+    # TwoOrgsChannel 用来生成channel配置信息，名字可以任意
+    # 需要包含 Consortium 和 Application 两部分。 
+    TwoOrgsChannel:
+        Consortium: SampleConsortium        # 通道所关联的联盟名称
+        <<: *ChannelDefaults                # 通道为默认配置，这里直接引用上面 channel 配置段中的 ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults        # 这里直接引用上面 Application 配置段中的 ApplicationDefaults
+            Organizations:
+                - *Org1
+                - *Org2
+            Capabilities:
+                <<: *ApplicationCapabilities # 这里直接引用上面Capabilities配置段中的ApplicationCapabilities
