@@ -1,0 +1,546 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+###############################################################################
+#
+#    Peer section
+#
+###############################################################################
+peer:
+
+    id: jdoe # 指定的节点ID
+
+    networkId: dev # 指定网络ID
+
+    listenAddress: 0.0.0.0:7051 #侦听本地网络接口上的地址。默认监听所有网络接口
+
+    address: 0.0.0.0:7051 # 节点对外的服务地址
+
+    addressAutoDetect: false # 是否自动探测对外服务地址 
+
+    keepalive:
+      # 指定客户机ping的最小间隔，如果客户端频繁发送ping，Peer服务器会自动断开
+        interval: 7200s
+
+        timeout: 20s
+
+        minInterval: 60s
+
+        client: # 客户端与Peer的通信设置
+            # 指定ping Peer节点的间隔时间，必须大于或等于 minInterval 的值 
+            interval: 60s 
+            timeout: 20s # 在断开peer节点连接之前等待的响应时间
+
+        deliveryClient: # 客户端与Orderer节点的通信设置
+            # Interval is the time between pings to ordering nodes.  This must
+            # greater than or equal to the minInterval specified by ordering
+            # nodes.
+            interval: 60s
+            # Timeout is the duration the client waits for a response from
+            # ordering nodes before closing the connection
+            timeout: 20s
+
+
+    gossip: # gossip相关配置
+       
+        bootstrap: 127.0.0.1:7051 # 启动后的初始节点
+
+        useLeaderElection: false # 是否指定使用选举方式产式Leader
+
+        orgLeader: true # 是否指定当前节点为Leader
+
+        membershipTrackerInterval: 5s
+
+        endpoint:
+
+        maxBlockCountToStore: 10 # 保存在内存中的最大区块
+
+        maxPropagationBurstLatency: 10ms #消息连续推送之间的最大时间(超过则触发，转发给其它节点)
+
+        maxPropagationBurstSize: 10 # 消息的最大存储数量，直到推送被触发
+
+        propagateIterations: 1 # 将消息推送到远程Peer节点的次数
+
+        propagatePeerNum: 3 # 选择推送消息到Peer节点的数量
+
+        pullInterval: 4s # 拉取消息的时间间隔
+
+        pullPeerNum: 3 # 从指定数量的Peer节点拉取
+
+        requestStateInfoInterval: 4s # 确定从Peer节点提取状态信息消息的频率(单位:秒)
+
+        publishStateInfoInterval: 4s # 确定将状态信息消息推送到Peer节点的频率
+
+        stateInfoRetentionInterval: # 状态信息的最长保存时间
+
+        publishCertPeriod: 10s #  启动后包括证书的等待时间
+
+        skipBlockVerification: false # 是否应该跳过区块消息的验证
+
+        dialTimeout: 3s # 拨号的超时时间
+
+        connTimeout: 2s # 连接超时时间
+
+        recvBuffSize: 20 # 接收到消息的缓存区大小
+
+        sendBuffSize: 200 # 发送消息的缓冲区大小
+
+        digestWaitTime: 1s # 处理摘要数据的等待时间
+
+        requestWaitTime: 1500ms # 处理nonce之前等待的时间
+
+        responseWaitTime: 2s # 终止拉取数据处理的等待时间
+
+        aliveTimeInterval: 5s # 心跳检查间隔时间
+
+        aliveExpirationTimeout: 25s # 心跳消息的超时时间
+        
+        reconnectInterval: 25s # 重新连接的间隔时间
+        
+        maxConnectionAttempts: 120 # 组织外的端点
+
+        msgExpirationFactor: 20
+
+        externalEndpoint:
+        # Leader election service configuration
+        election: # 选举Leader配置
+            startupGracePeriod: 15s # 最长等待时间
+
+            membershipSampleInterval: 1s # 检查稳定性的间隔时间
+            
+            leaderAliveThreshold: 10s # 进行选举的间隔时间
+            
+            leaderElectionDuration: 5s # 声明自己为Leader的等待时间
+
+        pvtData: # 私有数据配置
+            # 尝试从peer节点中提取给定块对应的私有数据的最大持续时间
+            pullRetryThreshold: 60s
+
+            # 当前分类帐在提交时的高度之间的最大差异
+            transientstoreMaxBlockRetention: 1000
+
+            pushAckTimeout: 3s # 等待每个对等方确认的最大时间
+            
+            btlPullMargin: 10
+
+             # 用作缓冲器；防止peer试图获取私有数据来自即将在接下来的N个块中被清除的对等节点
+            reconcileBatchSize: 10
+            reconcileSleepInterval: 1m
+            reconciliationEnabled: true
+            skipPullingInvalidTransactionsDuringCommit: false
+            implicitCollectionDisseminationPolicy:
+               requiredPeerCount: 0
+               maxPeerCount: 1
+
+        # Gossip state transfer related configuration
+        state:
+            # indicates whenever state transfer is enabled or not
+            # default value is true, i.e. state transfer is active
+            # and takes care to sync up missing blocks allowing
+            # lagging peer to catch up to speed with rest network.
+            # Keep in mind that when peer.gossip.useLeaderElection is true
+            # and there are several peers in the organization,
+            # or peer.gossip.useLeaderElection is false alongside with
+            # peer.gossip.orgleader being false, the peer's ledger may lag behind
+            # the rest of the peers and will never catch up due to state transfer
+            # being disabled.
+            enabled: false
+            # checkInterval interval to check whether peer is lagging behind enough to
+            # request blocks via state transfer from another peer.
+            checkInterval: 10s
+            # responseTimeout amount of time to wait for state transfer response from
+            # other peers
+            responseTimeout: 3s
+            # batchSize the number of blocks to request via state transfer from another peer
+            batchSize: 10
+            # blockBufferSize reflects the size of the re-ordering buffer
+            # which captures blocks and takes care to deliver them in order
+            # down to the ledger layer. The actual buffer size is bounded between
+            # 0 and 2*blockBufferSize, each channel maintains its own buffer
+            blockBufferSize: 20
+            # maxRetries maximum number of re-tries to ask
+            # for single state transfer request
+            maxRetries: 3
+
+    # TLS设置
+    tls:
+        # Require server-side TLS
+        enabled: true # 是否开启服务器端TLS 
+        # 是否需要客户端证书（没有配置使用证书的客户端不能连接到对等点）
+        clientAuthRequired: false
+        cert: # TLS服务器的X.509证书
+            file: tls/server.crt
+        key: # TLS服务器(需启用clientAuthEnabled的客户端)的签名私钥
+            file: tls/server.key
+        rootcert: # 可信任的根CA证书
+            file: tls/ca.crt
+        clientRootCAs: # 用于验证客户端证书的根证书
+            files:
+              - tls/ca.crt
+        clientKey: # 建立客户端连接时用于TLS的私钥。如果没有设置将使用peer.tls.key
+            file:
+        clientCert: # 建立客户端连接时用于TLS的证书。如果没有设置将使用peer.tls.cert
+            file:
+
+    authentication: # 与身份验证相关的配置
+        timewindow: 15m # 当前服务器时间与客户端请求消息中指定的客户端时间差异
+
+    fileSystemPath: /var/hyperledger/production # 文件存储路径
+
+    BCCSP: # 区块链加密实现
+        Default: SW # 设置SW为默认加密程序
+        SW: # SW加密配置（如果默认为SW）
+            Hash: SHA2 # 默认的哈希算法和安全级别
+            Security: 256
+            FileKeyStore: # 密钥存储位置
+                # If "", defaults to 'mspConfigPath'/keystore
+                KeyStore:
+        # Settings for the PKCS#11 crypto provider (i.e. when DEFAULT: PKCS11)
+        PKCS11: # PKCS11加密配置（如果默认为PKCS11）
+            Library: # PKCS11模块库位置
+            Label: # 令牌Label
+            Pin:
+            Hash:
+            Security:
+
+    # MSP配置路径，peer根据此路径找到MSP本地配置
+    mspConfigPath: msp
+
+    localMspId: Org1MSP  #本地MSP的标识符
+
+    client: # CLI客户端配置选项
+        # 连接超时
+        connTimeout: 3s
+
+    deliveryclient: # 订购服务相关的配置
+        reconnectTotalTimeThreshold: 3600s # 尝试重新连接的总时间
+
+        connTimeout: 3s # 订购服务节点连接超时
+
+        reConnectBackoffThreshold: 3600s # 最大延迟时间
+
+        addressOverrides:
+       
+
+    localMspType: bccsp # 本地MSP类型（默认情况下，是bccsp类型）
+
+    # 仅在非生产环境中与Go分析工具一起使用。在生产中，它应该被禁用
+    profile:
+        enabled:     false
+        listenAddress: 0.0.0.0:6060
+
+    # 定义处理程序可以过滤和自定义处理程序在对等点内传递的对象
+    handlers:
+        authFilters:
+          -
+            name: DefaultAuth
+          -
+            name: ExpirationCheck    # This filter checks identity x509 certificate expiration
+        decorators:
+          -
+            name: DefaultDecorator
+        endorsers:
+          escc:
+            name: DefaultEndorsement
+            library:
+        validators:
+          vscc:
+            name: DefaultValidation
+            library:
+
+    # 并行执行事务验证的goroutines的数量（注意重写此值可能会对性能产生负面影响）
+    validatorPoolSize:
+
+    # 客户端使用发现服务查询关于对等点的信息
+    # 例如——哪些同行加入了某个频道，最新消息是什么通道配置
+    # 最重要的是——给定一个链码和通道，什么可能的对等点集满足背书政策
+    discovery:
+        enabled: true
+        # Whether the authentication cache is enabled or not.
+        authCacheEnabled: true
+        # The maximum size of the cache, after which a purge takes place
+        authCacheMaxSize: 1000
+        # The proportion (0 to 1) of entries that remain in the cache after the cache is purged due to overpopulation
+        authCachePurgeRetentionRatio: 0.75
+        # Whether to allow non-admins to perform non channel scoped queries.
+        # When this is false, it means that only peer admins can perform non channel scoped queries.
+        orgMembersAllowedAccess: false
+
+    # Limits is used to configure some internal resource limits.
+    limits:
+        # Concurrency limits the number of concurrently running requests to a service on each peer.
+        # Currently this option is only applied to endorser service and deliver service.
+        # When the property is missing or the value is 0, the concurrency limit is disabled for the service.
+        concurrency:
+            # endorserService limits concurrent requests to endorser service that handles chaincode deployment, query and invocation,
+            # including both user chaincodes and system chaincodes.
+            endorserService: 2500
+            # deliverService limits concurrent event listeners registered to deliver service for blocks and transaction events.
+            deliverService: 2500
+
+###############################################################################
+#
+#    VM section
+#
+###############################################################################
+vm:
+
+    endpoint: unix:///var/run/docker.sock # vm管理系统的端点
+
+    # settings for docker vms
+    docker:
+        tls:
+            enabled: false
+            ca:
+                file: docker/ca.crt
+            cert:
+                file: docker/tls.crt
+            key:
+                file: docker/tls.key
+
+        attachStdout: false # 启用/禁用链码容器中的标准out/err
+
+
+        # 创建docker容器的参数
+        # 使用用于集群的ipam和dns-server可以有效地创建容器设置容器的网络模式
+        # 支持标准值是：“host”(默认)、“bridge”、“ipvlan”、“none”
+        # Dns -供容器使用的Dns服务器列表
+        #注:'Privileged'、'Binds'、'Links'和'PortBindings'属性不支持Docker主机配置，设置后将不使用
+        hostConfig:
+            NetworkMode: host
+            Dns:
+               # - 192.168.0.1
+            LogConfig:
+                Type: json-file
+                Config:
+                    max-size: "50m"
+                    max-file: "5"
+            Memory: 2147483648
+
+###############################################################################
+#
+#    Chaincode section
+#
+###############################################################################
+chaincode:
+
+    id:
+        path:
+        name:
+
+
+    # 通用构建器环境，适用于大多数链代码类型
+    builder: $(DOCKER_NS)/fabric-ccenv:$(TWO_DIGIT_VERSION)
+
+    # 在用户链码实例化过程中启用/禁用基本docker镜像的拉取
+    pull: false
+
+    golang:
+        # golang will never need more than baseos
+        runtime: $(DOCKER_NS)/fabric-baseos:$(TWO_DIGIT_VERSION)
+
+        # whether or not golang chaincode should be linked dynamically
+        dynamicLink: false
+
+    java:
+        # This is an image based on java:openjdk-8 with addition compiler
+        # tools added for java shim layer packaging.
+        # This image is packed with shim layer libraries that are necessary
+        # for Java chaincode runtime.
+        runtime: $(DOCKER_NS)/fabric-javaenv:$(TWO_DIGIT_VERSION)
+
+    node:
+        # This is an image based on node:$(NODE_VER)-alpine
+        runtime: $(DOCKER_NS)/fabric-nodeenv:$(TWO_DIGIT_VERSION)
+
+    # List of directories to treat as external builders and launchers for
+    # chaincode. The external builder detection processing will iterate over the
+    # builders in the order specified below.
+    externalBuilders:
+      - path: /var/hyperledger/fabric/chaincode/ccs-builder
+        name: ccs-builder
+        propagateEnvironment:
+          - HOME
+          - CORE_PEER_ID
+          - CORE_PEER_LOCALMSPID
+
+    # The maximum duration to wait for the chaincode build and install process
+    # to complete.
+    installTimeout: 300s
+
+    # Timeout duration for starting up a container and waiting for Register
+    # to come through.
+    startuptimeout: 300s
+
+    # Timeout duration for Invoke and Init calls to prevent runaway.
+    # This timeout is used by all chaincodes in all the channels, including
+    # system chaincodes.
+    # Note that during Invoke, if the image is not available (e.g. being
+    # cleaned up when in development environment), the peer will automatically
+    # build the image, which might take more time. In production environment,
+    # the chaincode image is unlikely to be deleted, so the timeout could be
+    # reduced accordingly.
+    executetimeout: 30s
+
+    # There are 2 modes: "dev" and "net".
+    # In dev mode, user runs the chaincode after starting peer from
+    # command line on local machine.
+    # In net mode, peer will run chaincode in a docker container.
+    mode: net
+
+    # keepalive in seconds. In situations where the communication goes through a
+    # proxy that does not support keep-alive, this parameter will maintain connection
+    # between peer and chaincode.
+    # A value <= 0 turns keepalive off
+    keepalive: 0
+
+
+    system: # 系统链码白名单
+        cscc: enable
+        _lifecycle: enable
+        cscc: enable
+        lscc: enable
+        qscc: enable
+
+    # Logging section for the chaincode container
+    logging:
+      # Default level for all loggers within the chaincode container
+      level:  info
+      # Override default level for the 'shim' logger
+      shim:   warning
+      # Format for the chaincode container logs
+      format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
+
+###############################################################################
+#
+#    Ledger section - ledger configuration encompasses both the blockchain
+#    and the state
+#    账本
+#
+###############################################################################
+ledger:
+
+  blockchain:
+
+  state:
+    stateDatabase: goleveldb  # 指定默认的状态数据库
+    # Limit on the number of records to return per query
+    totalQueryLimit: 100000
+    couchDBConfig:
+       couchDBAddress: 127.0.0.1:5984 # 监听地址
+       username:
+       password:
+       # Number of retries for CouchDB errors
+       maxRetries: 3
+       # Number of retries for CouchDB errors during peer startup.
+       # The delay between retries doubles for each attempt.
+       # Default of 10 retries results in 11 attempts over 2 minutes.
+       maxRetriesOnStartup: 10
+       # CouchDB request timeout (unit: duration, e.g. 20s)
+       requestTimeout: 35s
+       # Limit on the number of records per each CouchDB query
+       # Note that chaincode queries are only bound by totalQueryLimit.
+       # Internally the chaincode may execute multiple CouchDB queries,
+       # each of size internalQueryLimit.
+       internalQueryLimit: 1000
+       # Limit on the number of records per CouchDB bulk update batch
+       maxBatchUpdateSize: 1000
+       # Warm indexes after every N blocks.
+       # This option warms any indexes that have been
+       # deployed to CouchDB after every N blocks.
+       # A value of 1 will warm indexes after every block commit,
+       # to ensure fast selector queries.
+       # Increasing the value may improve write efficiency of peer and CouchDB,
+       # but may degrade query response time.
+       warmIndexesAfterNBlocks: 1
+       # Create the _global_changes system database
+       # This is optional.  Creating the global changes database will require
+       # additional system resources to track changes and maintain the database
+       createGlobalChangesDB: false
+       # CacheSize denotes the maximum mega bytes (MB) to be allocated for the in-memory state
+       # cache. Note that CacheSize needs to be a multiple of 32 MB. If it is not a multiple
+       # of 32 MB, the peer would round the size to the next multiple of 32 MB.
+       # To disable the cache, 0 MB needs to be assigned to the cacheSize.
+       cacheSize: 64
+
+  history:
+    enableHistoryDatabase: true # 是否开启历史数据库
+
+  pvtdataStore:
+    # the maximum db batch size for converting
+    # the ineligible missing data entries to eligible missing data entries
+    collElgProcMaxDbBatchSize: 5000
+    # the minimum duration (in milliseconds) between writing
+    # two consecutive db batches for converting the ineligible missing data entries to eligible missing data entries
+    collElgProcDbBatchesInterval: 1000
+    # The missing data entries are classified into two categories:
+    # (1) prioritized
+    # (2) deprioritized
+    # Initially, all missing data are in the prioritized list. When the
+    # reconciler is unable to fetch the missing data from other peers,
+    # the unreconciled missing data would be moved to the deprioritized list.
+    # The reconciler would retry deprioritized missing data after every
+    # deprioritizedDataReconcilerInterval (unit: minutes). Note that the
+    # interval needs to be greater than the reconcileSleepInterval
+    deprioritizedDataReconcilerInterval: 60m
+
+  snapshots:
+    # Path on the file system where peer will store ledger snapshots
+    rootDir: /var/hyperledger/production/snapshots
+
+###############################################################################
+#
+#    Operations section
+#
+###############################################################################
+operations:
+    # host and port for the operations server
+    listenAddress: 127.0.0.1:9443
+
+    # TLS configuration for the operations endpoint
+    tls:
+        # TLS enabled
+        enabled: false
+
+        # path to PEM encoded server certificate for the operations server
+        cert:
+            file:
+
+        # path to PEM encoded server key for the operations server
+        key:
+            file:
+
+        # most operations service endpoints require client authentication when TLS
+        # is enabled. clientAuthRequired requires client certificate authentication
+        # at the TLS layer to access all resources.
+        clientAuthRequired: false
+
+        # paths to PEM encoded ca certificates to trust for client authentication
+        clientRootCAs:
+            files: []
+
+###############################################################################
+#
+#    Metrics section
+#
+###############################################################################
+metrics:
+    # metrics provider is one of statsd, prometheus, or disabled
+    provider: disabled
+
+    # statsd configuration
+    statsd:
+        # network type: tcp or udp
+        network: udp
+
+        # statsd server address
+        address: 127.0.0.1:8125
+
+        # the interval at which locally cached counters and gauges are pushed
+        # to statsd; timings are pushed immediately
+        writeInterval: 10s
+
+        # prefix is prepended to all emitted statsd metrics
+        prefix:
