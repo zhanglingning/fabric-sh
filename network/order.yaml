@@ -1,0 +1,371 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   Orderer Configuration
+#
+#   - This controls the type and configuration of the orderer.
+#
+################################################################################
+General:
+    LedgerType: file    # 指定账本类型（可选file、RAM、json三种）
+
+    ListenAddress: 127.0.0.1 # 监听地址
+
+    ListenPort: 7050 # 监听端口号
+
+    # TLS: TLS settings for the GRPC server.
+    TLS: # GRPC服务器的TLS设置
+        Enabled: false # 默认不启用
+        PrivateKey: tls/server.key # 签名的私钥文件
+        Certificate: tls/server.crt # 证书文件
+        RootCAs: # 可信任的根CA证书
+          - tls/ca.crt
+        ClientAuthRequired: false
+        ClientRootCAs:
+    Keepalive: # GRPC服务器的激活设置
+        ServerMinInterval: 60s # 客户机ping之间的最小允许时间
+        ServerInterval: 7200s # 连接到客户机的ping之间的时间
+        ServerTimeout: 20s # 服务器等待响应的超时时间
+
+    MaxRecvMsgSize: 104857600
+    MaxSendMsgSize: 104857600
+
+    # Cluster settings for ordering service nodes that communicate with other ordering service nodes
+    # such as Raft based ordering service.
+    Cluster:
+        # SendBufferSize is the maximum number of messages in the egress buffer.
+        # Consensus messages are dropped if the buffer is full, and transaction
+        # messages are waiting for space to be freed.
+        SendBufferSize: 10
+
+        # ClientCertificate governs the file location of the client TLS certificate
+        # used to establish mutual TLS connections with other ordering service nodes.
+        # If not set, the server General.TLS.Certificate is re-used.
+        ClientCertificate:
+        # ClientPrivateKey governs the file location of the private key of the client TLS certificate.
+        # If not set, the server General.TLS.PrivateKey is re-used.
+        ClientPrivateKey:
+
+        # The below 4 properties should be either set together, or be unset together.
+        # If they are set, then the orderer node uses a separate listener for intra-cluster
+        # communication. If they are unset, then the general orderer listener is used.
+        # This is useful if you want to use a different TLS server certificates on the
+        # client-facing and the intra-cluster listeners.
+
+        # ListenPort defines the port on which the cluster listens to connections.
+        ListenPort:
+        # ListenAddress defines the IP on which to listen to intra-cluster communication.
+        ListenAddress:
+        # ServerCertificate defines the file location of the server TLS certificate used for intra-cluster
+        # communication.
+        ServerCertificate:
+        # ServerPrivateKey defines the file location of the private key of the TLS certificate.
+        ServerPrivateKey:
+
+    # Bootstrap method: The method by which to obtain the bootstrap block
+    # system channel is specified. The option can be one of:
+    #   "file" - path to a file containing the genesis block or config block of system channel
+    #   "none" - allows an orderer to start without a system channel configuration
+    BootstrapMethod: file
+
+    # Bootstrap file: The file containing the bootstrap block to use when
+    # initializing the orderer system channel and BootstrapMethod is set to
+    # "file".  The bootstrap file can be the genesis block, and it can also be
+    # a config block for late bootstrap of some consensus methods like Raft.
+    # Generate a genesis block by updating $FABRIC_CFG_PATH/configtx.yaml and
+    # using configtxgen command with "-outputBlock" option.
+    # Defaults to file "genesisblock" (in $FABRIC_CFG_PATH directory) if not specified.
+    BootstrapFile:
+
+    # LocalMSPDir is where to find the private crypto material needed by the
+    # orderer. It is set relative here as a default for dev environments but
+    # should be changed to the real location in production.
+    LocalMSPDir: msp
+
+    # LocalMSPID is the identity to register the local MSP material with the MSP
+    # manager. IMPORTANT: The local MSP ID of an orderer needs to match the MSP
+    # ID of one of the organizations defined in the orderer system channel's
+    # /Channel/Orderer configuration. The sample organization defined in the
+    # sample configuration provided has an MSP ID of "SampleOrg".
+    LocalMSPID: SampleOrg
+
+    # Enable an HTTP service for Go "pprof" profiling as documented at:
+    # https://golang.org/pkg/net/http/pprof
+    Profile:
+        Enabled: false
+        Address: 0.0.0.0:6060
+
+    # BCCSP configures the blockchain crypto service providers.
+    BCCSP:
+        # Default specifies the preferred blockchain crypto service provider
+        # to use. If the preferred provider is not available, the software
+        # based provider ("SW") will be used.
+        # Valid providers are:
+        #  - SW: a software based crypto provider
+        #  - PKCS11: a CA hardware security module crypto provider.
+        Default: SW
+
+        # SW configures the software based blockchain crypto provider.
+        SW:
+            # TODO: The default Hash and Security level needs refactoring to be
+            # fully configurable. Changing these defaults requires coordination
+            # SHA2 is hardcoded in several places, not only BCCSP
+            Hash: SHA2
+            Security: 256
+            # Location of key store. If this is unset, a location will be
+            # chosen using: 'LocalMSPDir'/keystore
+            FileKeyStore:
+                KeyStore:
+
+        # Settings for the PKCS#11 crypto provider (i.e. when DEFAULT: PKCS11)
+        PKCS11:
+            # Location of the PKCS11 module library
+            Library:
+            # Token Label
+            Label:
+            # User PIN
+            Pin:
+            Hash:
+            Security:
+            FileKeyStore:
+                KeyStore:
+
+    # Authentication contains configuration parameters related to authenticating
+    # client messages
+    Authentication:
+        # the acceptable difference between the current server time and the
+        # client's time as specified in a client request message
+        TimeWindow: 15m
+
+
+################################################################################
+#
+#   SECTION: File Ledger
+#
+#   - This section applies to the configuration of the file ledger.
+#
+################################################################################
+FileLedger:
+
+    # 区块存储路径
+    Location: /var/hyperledger/production/orderer
+
+################################################################################
+#
+#   SECTION: Kafka
+#
+#   - This section applies to the configuration of the Kafka-based orderer, and
+#     its interaction with the Kafka cluster.
+#
+################################################################################
+Kafka:
+
+    Retry: # 无法建立到Kafka集群的连接时的重试请求
+        ShortInterval: 5s  # 重试时间间隔
+        ShortTotal: 10m # 重试的总时间
+        LongInterval: 5m # 重试失败后再次发送重试的时间间隔
+        LongTotal: 12h # 重试的最长总时间
+        NetworkTimeouts: # 网络超时设置
+            DialTimeout: 10s
+            ReadTimeout: 10s
+            WriteTimeout: 10s
+        Metadata:  # 请求领导人选举时影响元数据的设置
+            RetryBackoff: 250ms # 指定重试的最大时间
+            RetryMax: 3 # 重试的最大次数
+        Producer: # 向Kafka集群发送消息失败的设置
+            RetryBackoff: 100ms  # 指定重试的最大时间
+            RetryMax: 3 # 重试的最大次数
+        Consumer: # 向Kafka集群读取消息失败的设置
+            RetryBackoff: 2s # 指定重试的最大时间
+    Topic:
+        ReplicationFactor: 3
+    Verbose: false # 是否为与Kafka集群的交互启用日志记录
+
+    TLS: # Orderer连接到Kafka集群的TLS设置
+
+      Enabled: false # 连接到Kafka集群时是否使用TLS
+
+      # PrivateKey: PEM-encoded private key the orderer will use for
+      # authentication.
+      PrivateKey:
+        # As an alternative to specifying the PrivateKey here, uncomment the
+        # following "File" key and specify the file name from which to load the
+        # value of PrivateKey.
+        #File: path/to/PrivateKey
+
+      # Certificate: PEM-encoded signed public key certificate the orderer will
+      # use for authentication.
+      Certificate:
+        # As an alternative to specifying the Certificate here, uncomment the
+        # following "File" key and specify the file name from which to load the
+        # value of Certificate.
+        #File: path/to/Certificate
+
+      # RootCAs: PEM-encoded trusted root certificates used to validate
+      # certificates from the Kafka cluster.
+      RootCAs:
+        # As an alternative to specifying the RootCAs here, uncomment the
+        # following "File" key and specify the file name from which to load the
+        # value of RootCAs.
+        #File: path/to/RootCAs
+
+    # SASLPlain: Settings for using SASL/PLAIN authentication with Kafka brokers
+    SASLPlain:
+      # Enabled: Use SASL/PLAIN to authenticate with Kafka brokers
+      Enabled: false
+      # User: Required when Enabled is set to true
+      User:
+      # Password: Required when Enabled is set to true
+      Password:
+
+    # Kafka protocol version used to communicate with the Kafka cluster brokers
+    # (defaults to 0.10.2.0 if not specified)
+    Version:
+
+################################################################################
+#
+#   Debug Configuration
+#
+#   - This controls the debugging options for the orderer
+#
+################################################################################
+Debug:
+
+    # BroadcastTraceDir when set will cause each request to the Broadcast service
+    # for this orderer to be written to a file in this directory
+    BroadcastTraceDir:
+
+    # DeliverTraceDir when set will cause each request to the Deliver service
+    # for this orderer to be written to a file in this directory
+    DeliverTraceDir:
+
+################################################################################
+#
+#   Operations Configuration
+#
+#   - This configures the operations server endpoint for the orderer
+#
+################################################################################
+Operations:
+    # host and port for the operations server
+    ListenAddress: 127.0.0.1:8443
+
+    # TLS configuration for the operations endpoint
+    TLS:
+        # TLS enabled
+        Enabled: false
+
+        # Certificate is the location of the PEM encoded TLS certificate
+        Certificate:
+
+        # PrivateKey points to the location of the PEM-encoded key
+        PrivateKey:
+
+        # Most operations service endpoints require client authentication when TLS
+        # is enabled. ClientAuthRequired requires client certificate authentication
+        # at the TLS layer to access all resources.
+        ClientAuthRequired: false
+
+        # Paths to PEM encoded ca certificates to trust for client authentication
+        ClientRootCAs: []
+
+################################################################################
+#
+#   Metrics Configuration
+#
+#   - This configures metrics collection for the orderer
+#
+################################################################################
+Metrics:
+    # The metrics provider is one of statsd, prometheus, or disabled
+    Provider: disabled
+
+    # The statsd configuration
+    Statsd:
+      # network type: tcp or udp
+      Network: udp
+
+      # the statsd server address
+      Address: 127.0.0.1:8125
+
+      # The interval at which locally cached counters and gauges are pushed
+      # to statsd; timings are pushed immediately
+      WriteInterval: 30s
+
+      # The prefix is prepended to all emitted statsd metrics
+      Prefix:
+
+################################################################################
+#
+#   Admin Configuration
+#
+#   - This configures the admin server endpoint for the orderer
+#
+################################################################################
+Admin:
+    # host and port for the admin server
+    ListenAddress: 127.0.0.1:9443
+
+    # TLS configuration for the admin endpoint
+    TLS:
+        # TLS enabled
+        Enabled: false
+
+        # Certificate is the location of the PEM encoded TLS certificate
+        Certificate:
+
+        # PrivateKey points to the location of the PEM-encoded key
+        PrivateKey:
+
+        # Most admin service endpoints require client authentication when TLS
+        # is enabled. ClientAuthRequired requires client certificate authentication
+        # at the TLS layer to access all resources.
+        #
+        # NOTE: When TLS is enabled, the admin endpoint requires mutual TLS. The
+        # orderer will panic on startup if this value is set to false.
+        ClientAuthRequired: true
+
+        # Paths to PEM encoded ca certificates to trust for client authentication
+        ClientRootCAs: []
+
+################################################################################
+#
+#   Channel participation API Configuration
+#
+#   - This provides the channel participation API configuration for the orderer.
+#   - Channel participation uses the ListenAddress and TLS settings of the Admin
+#     service.
+#
+################################################################################
+ChannelParticipation:
+    # Channel participation API is enabled.
+    Enabled: false
+
+    # The maximum size of the request body when joining a channel.
+    MaxRequestBodySize: 1 MB
+
+
+################################################################################
+#
+#   Consensus Configuration
+#
+#   - This section contains config options for a consensus plugin. It is opaque
+#     to orderer, and completely up to consensus implementation to make use of.
+#
+################################################################################
+Consensus:
+    # The allowed key-value pairs here depend on consensus plugin. For etcd/raft,
+    # we use following options:
+
+    # WALDir specifies the location at which Write Ahead Logs for etcd/raft are
+    # stored. Each channel will have its own subdir named after channel ID.
+    WALDir: /var/hyperledger/production/orderer/etcdraft/wal
+
+    # SnapDir specifies the location at which snapshots for etcd/raft are
+    # stored. Each channel will have its own subdir named after channel ID.
+    SnapDir: /var/hyperledger/production/orderer/etcdraft/snapshot
