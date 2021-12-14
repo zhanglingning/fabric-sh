@@ -1,0 +1,96 @@
+<!--
+ * @Author: zhangln
+ * @Date: 2021-12-14 09:36:51
+ * @LastEditTime: 2021-12-14 10:32:12
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style></style>
+	<link rel="stylesheet" href="./../css/reset.css">
+	<link rel="stylesheet" href="./Entry.css">
+</head>
+<body>
+    <div class="containter">
+        <div class="titles center">
+            <img src="../img/logo.png" height="80px" alt="">
+            学生信息录入系统
+        </div>
+        <div class="mt30">
+            <table class="demo-table">
+                <tr>
+                    <td>学生姓名：</td>
+                    <td>
+                       <input type="text" id="userName" placeholder="请输入学生姓名">
+                    </td>
+                    <td>
+                        电话：
+                    </td>
+                    <td>
+                       <input type="text" id="userPhone" placeholder="请输入电话">
+                    </td>
+                </tr>
+                <tr>
+                    <td>性别：</td>
+                    <td>
+                       <input type="text" id="sex" placeholder="请输入性别">
+                    </td>
+                    <td>
+                        身份证号码：
+                    </td>
+                    <td>
+                       <input type="text" id="userIdCard" placeholder="请输入身份证号码">
+                    </td>
+                </tr>
+                <tr>
+                    <td>籍贯：</td>
+                    <td>
+                       <input type="text"  id="userAddress"  placeholder="请输入籍贯">
+                    </td>
+                    <td>
+                        民族：
+                    </td>
+                    <td>
+                       <input type="text"  id="userNation" placeholder="请输入民族">
+                    </td>
+                </tr>
+                <tr>
+                    <td>学校：</td>
+                    <td>
+                       <input type="text" id="userSchool" placeholder="请输入学校">
+                    </td>
+                    <td>
+                        入学日期：
+                    </td>
+                    <td>
+                       <input type="text" id="userEnterTime" placeholder="请输入入学日期">
+                    </td>
+                </tr>
+                <tr>
+                    <td>专业：</td>
+                    <td>
+                       <input type="text" id="userMajor" placeholder="请输入专业">
+                    </td>
+                    <td>
+                        院系：
+                    </td>
+                    <td>
+                       <input type="text" id="userFaculty" placeholder="请输入院系">
+                    </td>
+                </tr>
+            </table>
+            <div class="mt30 center">
+                <span class="tbn" id="saveBtn">
+                    录入学生信息
+                </span>
+            </div>
+        </div>
+    </div>
+    <script src="./../js/jquery.min.js"></script>
+    <script src="./Entry.js"></script>
+</body>
+</html>
