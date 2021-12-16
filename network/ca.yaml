@@ -1,0 +1,77 @@
+version: '2'
+
+networks:
+  fabric-ca:
+
+services:
+#   ca-tls:
+#     container_name: 1.4_ca-tls
+#     image: hyperledger/fabric-ca:1.4.0
+#     command: sh -c 'fabric-ca-server start -d -b tls-ca-admin:tls-ca-adminpw'
+#     environment:
+#         - FABRIC_CA_SERVER_HOME=/usr/local/hyper/fabric-ca/crypto
+#         - FABRIC_CA_SERVER_CA_NAME=ca-tls
+#         - FABRIC_CA_SERVER_TLS_ENABLED=true
+#         - FABRIC_CA_SERVER_CSR_CN=tls-ca.example.com
+#         - FABRIC_CA_SERVER_CSR_HOSTS=tls-ca.example.com
+#         - FABRIC_CA_SERVER_DEBUG=true
+#     volumes:
+#         - /usr/local/hyper/test3/crypto-config/tls-ca:/usr/local/hyper/fabric-ca
+#     networks:
+#         - fabric-ca
+#     ports:
+#         - 7052:7054
+
+#   ca-org0:
+#     container_name: 1.4_ca-org0
+#     image: hyperledger/fabric-ca:1.4.0
+#     command: sh -c 'fabric-ca-server start -d -b ca-org0-admin:ca-org0-adminpw'
+#     environment:
+#         - FABRIC_CA_SERVER_HOME=/usr/local/hyper/fabric-ca/crypto
+#         - FABRIC_CA_SERVER_CA_NAME=ca-org0 
+#         - FABRIC_CA_SERVER_TLS_ENABLED=true
+#         - FABRIC_CA_SERVER_CSR_CN=ca.org0.example.com
+#         - FABRIC_CA_SERVER_CSR_HOSTS=ca.org0.example.com
+#         - FABRIC_CA_SERVER_DEBUG=true
+#     volumes:
+#         - /usr/local/hyper/test3/crypto-config/org0-ca:/usr/local/hyper/fabric-ca
+#     networks:
+#         - fabric-ca
+#     ports:
+#         - 7053:7054
+
+  ca-org1:
+    container_name: ca-org1
+    image: hyperledger/fabric-ca:1.5
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/priv_sk -b ca-org1-admin:ca-org1-adminpw -d'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/etc/hyperledger/fabric-ca-server 
+        - FABRIC_CA_SERVER_CA_NAME=ca-org1 
+        - FABRIC_CA_SERVER_TLS_ENABLED=false
+        - FABRIC_CA_SERVER_CSR_CN=ca.org1.example.com
+        - FABRIC_CA_SERVER_CSR_HOSTS=ca.org1.example.com
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - /usr/local/hyper/test5/crypto-config/peerOrganizations/org1.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    networks:
+        - fabric-ca
+    ports:
+        - 7054:7054
+
+  # ca-org2:
+  #   container_name: 1.4_ca-org2
+  #   image: hyperledger/fabric-ca:1.4.0
+  #   command: sh -c 'fabric-ca-server start -d -b ca-org2-admin:ca-org2-adminpw'
+  #   environment:
+  #       - FABRIC_CA_SERVER_HOME=/usr/local/hyper/fabric-ca/crypto
+  #       - FABRIC_CA_SERVER_TLS_ENABLED=true
+  #       - FABRIC_CA_SERVER_CA_NAME=ca-org2
+  #       - FABRIC_CA_SERVER_CSR_CN=ca.org2.example.com
+  #       - FABRIC_CA_SERVER_CSR_HOSTS=ca.org2.example.com
+  #       - FABRIC_CA_SERVER_DEBUG=true
+  #   volumes:
+  #       - /usr/local/hyper/test3/crypto-config/org2-ca:/usr/local/hyper/fabric-ca
+  #   networks:
+  #       - fabric-ca
+  #   ports:
+  #       - 7055:7054
